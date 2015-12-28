@@ -28,3 +28,30 @@ void* get_free_space_addr(pid_t pid)
         return NULL;
 }
 
+void *get_lib_space(pid_t pid,const char *lib_name)
+{
+    char file_name[50];
+    FILE *fp;
+    char temp[200];
+    char line[200];
+    void *addr;
+    int flag;
+    sprintf(file_name,"/proc/%d/maps",pid);
+    fp=fopen(file_name,"r");
+    if(fp==NULL)
+        return NULL;
+    while(fgets(line,200,fp)!=NULL)
+    {
+        sscanf(line,"%lx-%*lx %*s %*s %*s %*s %s",&addr,temp);
+        if(strstr(temp,lib_name)!=NULL)
+        {   
+            flag=1;
+            break;
+        }
+    }
+    if(flag)
+        return addr;
+    else
+        return NULL;
+}
+
