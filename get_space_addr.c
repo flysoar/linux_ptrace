@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/ptrace.h>
 #include <dlfcn.h>
+#include "f_ptrace.h"
 
 void* get_free_space_addr(pid_t pid)
 {

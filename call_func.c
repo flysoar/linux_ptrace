@@ -3,12 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BAD_ADDR 0x2333333333333333
+#include "f_ptrace.h"
 
-typedef union data{
-    long val;
-    char chars[sizeof(long)];
-}data;
+#define BAD_ADDR 0x2333333333333333
 
 void remote_push(pid_t pid,data datas)
 {

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "f_ptrace.h"
+
 int ptrace_get_data(pid_t pid,void *local_addr,void *remote_addr,long len)
 {
     union u{
