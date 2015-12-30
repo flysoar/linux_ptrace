@@ -22,7 +22,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
-
+#include <unistd.h>
 #include "f_ptrace.h"
 
 int intercept_write(pid_t pid,const char* target)
@@ -31,10 +31,10 @@ int intercept_write(pid_t pid,const char* target)
 	int stat;
 	unsigned long long int orig_len;
 	int in_syscall=0;
+	char *tar;
 	while (1)
 	{
-		ptrace(pid,PTRACE_SYSCALL,NULL,NULL);
-		waitpid(pid,&stat,0);
+		waitpid(pid,&stat,WUNTRACED);
 		if(WIFEXITED(stat))
 			return -1;
 		ptrace(PTRACE_GETREGS,pid,NULL,&regs);
@@ -44,13 +44,17 @@ int intercept_write(pid_t pid,const char* target)
 			{
 				in_syscall=1;
 				orig_len=regs.rdx;
-				char *temp=malloc(orig_len);
+				char *temp=malloc(orig_len+1);
+				memset(temp,0,orig_len);
 				if(temp==NULL)
 					return -1;
 				ptrace_get_data(pid,temp,(void *)regs.rsi,orig_len);
-				if(strstr(temp,target)!=NULL)
-					regs.rdx=0;
+				if((tar=strstr(temp,target))!=NULL)
+					for(int j=0;j<strlen(target);j++)
+						tar[j]=32;
+				ptrace_put_data(pid,temp,(void *)regs.rsi,orig_len-orig_len%sizeof(long));
 				ptrace(pid,PTRACE_SETREGS,NULL,&regs);
+				free(temp);
 			}
 			else
 			{
@@ -60,6 +64,7 @@ int intercept_write(pid_t pid,const char* target)
 				return 0;
 			}
 		}
+		ptrace(PTRACE_SYSCALL,pid,NULL,NULL);
 	}
 }
 
@@ -72,9 +77,9 @@ int intercept_read(pid_t pid,long* len,char** ptr)
 	while(1)
 	{
 		ptrace(PTRACE_SYSCALL,pid,NULL,NULL);
-		waitpid(pid,&stat,0);
+		waitpid(pid,&stat,WUNTRACED);
 		if(WIFEXITED(stat))
-			return -1;
+			return -1;           //exited
 		ptrace(PTRACE_GETREGS,pid,NULL,&regs);
 		if(regs.orig_rax==SYS_read)
 		{
@@ -85,10 +90,10 @@ int intercept_read(pid_t pid,long* len,char** ptr)
 			else
 			{
 				if(regs.rdx<=0)
-					return -2;
+					return -2;    //syscall fail
 				*ptr=malloc(regs.rdx);
 				if(*ptr==NULL)
-					return -3;
+					return -3;    //malloc fail
 				ptrace_get_data(pid,*ptr,(void *)regs.rsi,regs.rdx);
 				return 0;
 			}

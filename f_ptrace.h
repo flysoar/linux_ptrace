@@ -33,4 +33,4 @@ void* get_lib_space(pid_t pid,const char *lib_name);
 void* get_remote_func_addr(pid_t,void *local_function,const char* lib_name);
 
 int intercept_write(pid_t pid,const char* target);
-char* intercep_read(pid_t pid,long *len);
+int intercept_read(pid_t pid,long *len,char** ptr);

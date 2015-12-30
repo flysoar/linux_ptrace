@@ -73,4 +73,4 @@ void *get_remote_func_addr(pid_t pid,void *local_function,const char* lib_name)
     return NULL;
 }
 
-void main(){}
+
