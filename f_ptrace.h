@@ -34,3 +34,6 @@ void* get_remote_func_addr(pid_t,void *local_function,const char* lib_name);
 
 int intercept_write(pid_t pid,const char* target);
 int intercept_read(pid_t pid,long *len,char** ptr);
+
+void ptrace_make_break(pid_t pid,void *addr,data* s_data);
+void ptrace_break_rec(pid_t pid,void *addr,data* s_data);
